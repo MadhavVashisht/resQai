@@ -5,9 +5,8 @@ import json
 import traceback
 from datetime import datetime
 from pydantic import BaseModel
-from typing import List
+from typing import List, Tuple
 
-# ... (The first part of your script remains the same) ...
 print("--- Script starting in production mode ---")
 
 model = xgb.XGBClassifier()
@@ -20,7 +19,7 @@ except Exception as e:
 
 disaster_map = {0: "Flood", 1: "Storm", 2: "Earthquake", 3: "Epidemic", 4: "Landslide", 5: "Drought", 6: "Extreme temperature", 7: "Wildfire", 8: "Volcanic activity", 9: "Other"}
 
-# --- MODIFIED: The core function now takes 4 inputs ---
+# --- The core function now takes 4 inputs ---
 def generate_action_plan(location_str, time, active_incidents, resources_str):
     try:
         if model is None:
@@ -29,7 +28,7 @@ def generate_action_plan(location_str, time, active_incidents, resources_str):
         location = json.loads(location_str)
         resources = json.loads(resources_str)
 
-        # --- MODIFIED: Features list is hardcoded here ---
+        # Features list is hardcoded here, as requested
         features = [0.5] * 271
         
         X_input = pd.DataFrame([features])
@@ -40,7 +39,7 @@ def generate_action_plan(location_str, time, active_incidents, resources_str):
     except Exception as e:
         return {"error": str(e), "traceback": traceback.format_exc()}
 
-# --- MODIFIED: Gradio interface now accepts 4 inputs ---
+# --- Gradio interface now accepts 4 inputs ---
 iface = gr.Interface(
     fn=generate_action_plan,
     inputs=[
@@ -69,10 +68,10 @@ def generate_action_plan_get(
     """
     return generate_action_plan(location_str, time, active_incidents, resources_str)
 
-# --- ✅ NEW POST ENDPOINT ---
-# Define the data model for the incoming JSON body
+# --- ✅ POST ENDPOINT ---
+# Corrected data model for the incoming JSON body
 class PredictPayload(BaseModel):
-    data: List[
+    data: Tuple[
         str,  # location_str
         str,  # time
         int,  # active_incidents
