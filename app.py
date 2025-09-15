@@ -4,6 +4,8 @@ import xgboost as xgb
 import json
 import traceback
 from datetime import datetime
+from pydantic import BaseModel
+from typing import List
 
 # ... (The first part of your script remains the same) ...
 print("--- Script starting in production mode ---")
@@ -18,7 +20,7 @@ except Exception as e:
 
 disaster_map = {0: "Flood", 1: "Storm", 2: "Earthquake", 3: "Epidemic", 4: "Landslide", 5: "Drought", 6: "Extreme temperature", 7: "Wildfire", 8: "Volcanic activity", 9: "Other"}
 
-# --- MODIFIED: Removed 'features_str' from function signature ---
+# --- MODIFIED: The core function now takes 4 inputs ---
 def generate_action_plan(location_str, time, active_incidents, resources_str):
     try:
         if model is None:
@@ -27,7 +29,7 @@ def generate_action_plan(location_str, time, active_incidents, resources_str):
         location = json.loads(location_str)
         resources = json.loads(resources_str)
 
-        # --- MODIFIED: Features list is now hardcoded ---
+        # --- MODIFIED: Features list is hardcoded here ---
         features = [0.5] * 271
         
         X_input = pd.DataFrame([features])
@@ -38,7 +40,7 @@ def generate_action_plan(location_str, time, active_incidents, resources_str):
     except Exception as e:
         return {"error": str(e), "traceback": traceback.format_exc()}
 
-# --- MODIFIED: Removed the 'features_str' input textbox ---
+# --- MODIFIED: Gradio interface now accepts 4 inputs ---
 iface = gr.Interface(
     fn=generate_action_plan,
     inputs=[
@@ -51,10 +53,10 @@ iface = gr.Interface(
     title="ResQAI - 30-Minute Disaster Response Plan"
 )
 
-# --- ✅ NEW SECTION TO ADD A GET ENDPOINT ---
+# --- FastAPI Endpoints ---
 app = iface.app
 
-# --- MODIFIED: Removed 'features_str' from the function signature and parameter list ---
+# --- ✅ GET ENDPOINT ---
 @app.get("/run/predict")
 def generate_action_plan_get(
     location_str: str,
@@ -63,8 +65,24 @@ def generate_action_plan_get(
     resources_str: str
 ):
     """
-    This function creates a GET endpoint that accepts URL query parameters
-    and then calls our original prediction function.
+    Handles GET requests by calling the main function with URL parameters.
     """
-    # Call the original function with the parameters from the URL
+    return generate_action_plan(location_str, time, active_incidents, resources_str)
+
+# --- ✅ NEW POST ENDPOINT ---
+# Define the data model for the incoming JSON body
+class PredictPayload(BaseModel):
+    data: List[
+        str,  # location_str
+        str,  # time
+        int,  # active_incidents
+        str   # resources_str
+    ]
+
+@app.post("/run/predict")
+def generate_action_plan_post(payload: PredictPayload):
+    """
+    Handles POST requests by parsing the JSON body and calling the main function.
+    """
+    location_str, time, active_incidents, resources_str = payload.data
     return generate_action_plan(location_str, time, active_incidents, resources_str)
