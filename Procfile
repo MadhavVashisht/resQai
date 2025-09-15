@@ -1,1 +1,1 @@
-web: gunicorn app:iface.app --workers 4 --worker-class uvicorn.workers.UvicornWorker
+web: uvicorn app:iface.app --host 0.0.0.0 --port $PORT
