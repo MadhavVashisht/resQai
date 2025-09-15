@@ -15,9 +15,10 @@ except Exception as e:
     print(f"--- CRITICAL ERROR: Model loading failed! ---\n{e}")
     model = None
 
-# ... (disaster_map and generate_action_plan function remain the same) ...
+# --- Mapping from numerical prediction to disaster name ---
 disaster_map = {0: "Flood", 1: "Storm", 2: "Earthquake", 3: "Epidemic", 4: "Landslide", 5: "Drought", 6: "Extreme temperature", 7: "Wildfire", 8: "Volcanic activity", 9: "Other"}
 
+# --- Main prediction function ---
 def generate_action_plan(location_str, time, active_incidents, features_str, resources_str):
     try:
         if model is None:
@@ -49,5 +50,5 @@ iface = gr.Interface(
     title="ResQAI - 30-Minute Disaster Response Plan"
 )
 
-# NOTE: The iface.launch() block has been removed for Render deployment.
-# Gunicorn will serve the 'iface' object directly.
+# NOTE: The iface.launch() block must be removed for Railway/Render deployment.
+# Gunicorn serves the 'iface' object directly.
